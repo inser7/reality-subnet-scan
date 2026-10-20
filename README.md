@@ -1,17 +1,33 @@
 # reality-subnet-scan
 
-Ищет сайт для REALITY в той же подсети, что и VPS.
+Finds a REALITY camouflage site in the same subnet as the VPS.
 
-Клиент подключается к IP сервера, а в TLS подставляет чужое имя. Если это имя живёт в другой сети (например `.ru` на эстонском адресе), несовпадение видно фильтру. Сканер обходит соседние адреса и оставляет только те, где имя из сертификата само резолвится в этот IP.
+## Contents
 
-Проверка та же, что у [RealiTLScanner](https://github.com/XTLS/RealiTLScanner): TCP 443, TLS 1.3, HTTP/2. Дополнительно имя сверяется с DNS. Отбрасываются `.ru`, `.ir`, `.cn`, `.su` и имена с `apple`, `icloud`, `microsoft`, `cloudflare`, `duckdns`. Чужой Reality (в сертификате `vk.com` или `github.com`, а A-запись указывает в другое место) в `MATCH` не попадает.
+- [Why](#why)
+- [Checks](#checks)
+- [Usage](#usage)
+- [Output](#output)
+- [Русская версия](README.ru.md)
 
-Сборки RealiTLScanner под macOS нет. Если включён туннель и он перехватывает маршрут по умолчанию, сканируйте со своего интерфейса, не с VPS.
+## Why
+
+The client connects to the server IP and presents someone else's name in TLS. If that name lives on another network (a `.ru` name on an Estonian address, for example), the mismatch is visible to filters. The scanner walks neighboring addresses and keeps a name only when the certificate name resolves to that same IP.
+
+## Checks
+
+Same handshake checks as [RealiTLScanner](https://github.com/XTLS/RealiTLScanner): TCP 443, TLS 1.3, HTTP/2. The name is also checked in DNS. Dropped names end in `.ru`, `.ir`, `.cn`, or `.su`, or contain `apple`, `icloud`, `microsoft`, `cloudflare`, or `duckdns`. Another server's REALITY certificate (`vk.com`, `github.com`, and the like) is left out of `MATCH` when its A record points elsewhere.
+
+RealiTLScanner has no macOS build. If a tunnel captures the default route, scan from your own interface, not from the VPS.
+
+## Usage
 
 ```bash
 go run . -addr 203.0.113.0/24 -iface en0 -skip 203.0.113.10
 ```
 
-Повторяйте `-addr` и `-skip` для нескольких сетей и своих адресов.
+Repeat `-addr` and `-skip` for more networks and for your own addresses.
 
-Строка `TLS` — рукопожатие подошло. Строка `MATCH` — у имени есть A-запись на этот IP, его можно ставить в dest и SNI.
+## Output
+
+A `TLS` line means the handshake matched. A `MATCH` line means the name has an A record on that IP and can be used as dest and SNI.
